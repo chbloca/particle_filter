@@ -86,7 +86,6 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
         particles[i].y = dist_y(gen);
         particles[i].theta = dist_theta(gen);
     }
-
 }
 
 void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted, 
@@ -99,7 +98,6 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   probably find it useful to implement this method and use it as a helper 
    *   during the updateWeights phase.
    */
-
     double min_distance = std::numeric_limits<double>::max();
     int nearest_id;
     for(int i = 0; i < observations.size(); i++){
@@ -130,7 +128,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
-
     double weight_norm = 0.0;
     for(int i = 0; i < num_particles; i++){
 
@@ -186,7 +183,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         particles[i].weight /= weight_norm;
         weights[i] = particles[i].weight;
     }
-
 }
 
 void ParticleFilter::resample() {
@@ -196,8 +192,6 @@ void ParticleFilter::resample() {
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
-    /*
-
     double max_weight = std::numeric_limits<double>::min();
     for(int i = 0; i < num_particles; i++){
         if(particles[i].weight > max_weight){
@@ -223,7 +217,6 @@ void ParticleFilter::resample() {
         resampled_particles.push_back(particles[index]);
     }
     particles = resampled_particles;
-    */
 }
 
 void ParticleFilter::SetAssociations(Particle& particle, 
