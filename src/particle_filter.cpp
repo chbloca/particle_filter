@@ -61,6 +61,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
    *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
    *  http://www.cplusplus.com/reference/random/default_random_engine/
    */
+
     double pred_x;
     double pred_y;
     double pred_theta;
@@ -85,6 +86,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
         particles[i].y = dist_y(gen);
         particles[i].theta = dist_theta(gen);
     }
+
 }
 
 void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted, 
@@ -97,6 +99,7 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   probably find it useful to implement this method and use it as a helper 
    *   during the updateWeights phase.
    */
+
     double min_distance = std::numeric_limits<double>::max();
     int nearest_id;
     for(int i = 0; i < observations.size(); i++){
@@ -127,7 +130,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
-    double weight_total = 0.0;
+
+    double weight_norm = 0.0;
     for(int i = 0; i < num_particles; i++){
 
         // Apply homogeneous transformation to conver from car coordinate system to map coordinate system
@@ -140,14 +144,14 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         }
         // Discard landmarks out of sensor range
         std::vector<LandmarkObs> landmarks_in_range;
-        for(int k = 0; k < map_landmarks.landmark_list.size(); k++){
+        for(int j = 0; j < map_landmarks.landmark_list.size(); j++){
             double range = dist(particles[i].x, particles[i].y,
-                                map_landmarks.landmark_list[k].x_f, map_landmarks.landmark_list[k].y_f);
+                                map_landmarks.landmark_list[j].x_f, map_landmarks.landmark_list[j].y_f);
             if(range < sensor_range){
                 LandmarkObs tmp;
-                tmp.x = map_landmarks.landmark_list[k].x_f;
-                tmp.y = map_landmarks.landmark_list[k].y_f;
-                tmp.id = map_landmarks.landmark_list[k].id_i;
+                tmp.x = map_landmarks.landmark_list[j].x_f;
+                tmp.y = map_landmarks.landmark_list[j].y_f;
+                tmp.id = map_landmarks.landmark_list[j].id_i;
                 landmarks_in_range.push_back(tmp);
             }
         }
@@ -158,14 +162,14 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         double exponent;
 
         double gauss_norm = 1 / (2 * M_PI * sig_x * sig_y);
-        for(int l = 0; transformed_observations.size(); l++){
-            double x = transformed_observations[l].x;
-            double y = transformed_observations[l].y;
+        for(int j = 0; transformed_observations.size(); j++){
+            double x = transformed_observations[j].x;
+            double y = transformed_observations[j].y;
 
-            for(int m = 0; map_landmarks.landmark_list.size(); m++){
-                if(map_landmarks.landmark_list[m].id_i == transformed_observations[l].id){
-                    double mu_x = landmarks_in_range[m].x;
-                    double mu_y = landmarks_in_range[m].y;
+            for(int k = 0; map_landmarks.landmark_list.size(); k++){
+                if(map_landmarks.landmark_list[k].id_i == transformed_observations[j].id){
+                    double mu_x = landmarks_in_range[k].x;
+                    double mu_y = landmarks_in_range[k].y;
 
                     exponent = pow(x - mu_x, 2) / (2 * sig_x * sig_x) +
                                       pow(y - mu_y, 2) / (2 * sig_y * sig_y);
@@ -173,15 +177,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                     particles[i].weight *= gauss_norm * exp(- exponent);
                 }
             }
-            weights[i] = gauss_norm * exp(- exponent);
+            weights[j] = gauss_norm * exp(- exponent);
         }
-        weight_total += particles[i].weight;
+        weight_norm += particles[i].weight;
     }
 
     for(int i = 0; i < particles.size(); i++){
-        particles[i].weight /= weight_total;
+        particles[i].weight /= weight_norm;
         weights[i] = particles[i].weight;
     }
+
 }
 
 void ParticleFilter::resample() {
@@ -191,6 +196,7 @@ void ParticleFilter::resample() {
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
+    /*
 
     double max_weight = std::numeric_limits<double>::min();
     for(int i = 0; i < num_particles; i++){
@@ -217,6 +223,7 @@ void ParticleFilter::resample() {
         resampled_particles.push_back(particles[index]);
     }
     particles = resampled_particles;
+    */
 }
 
 void ParticleFilter::SetAssociations(Particle& particle, 
