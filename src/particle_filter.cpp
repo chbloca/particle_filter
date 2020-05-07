@@ -97,18 +97,18 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   probably find it useful to implement this method and use it as a helper 
    *   during the updateWeights phase.
    */
-    vector<double> distances;
-    for(int i = 0; i < predicted.size(); i++){
-        distances.push_back(dist(predicted[i].x, predicted[i].y, observations[i].x, observations[i].y));
+    double min_distance = std::numeric_limits<double>::max();
+    int nearest_id;
+    for(int i = 0; i < observations.size(); i++){
+        for(int j = 0; j < predicted.size(); j++){
+            double distance = dist(observations[i].x, predicted[j].x, observations[i].y, predicted[j].y);
+            if(distance < min_distance){
+                min_distance = distance;
+                nearest_id = predicted[j].id;
+            }
+        }
+        observations[i].id = nearest_id;
     }
-    vector<double>::iterator it_min;
-    vector<double>::iterator it;
-    it_min = std::min_element(distances.begin(), distances.end());
-    int i = 0;
-    for(it = distances.begin(); it < it_min; it++){
-        i += 1;
-    }
-
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -127,11 +127,61 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
-    for(int i = 0; i < observations.size(), i++){
-        observations[i].x += cos(theta) * observations[i].x - sin(theta) * observations[i].x;
-        observations[i].y += sin(theta) * observations[i].y + cos(theta) * observations[i].y;
+    double weight_total = 0.0;
+    for(int i = 0; i < num_particles; i++){
+
+        // Apply homogeneous transformation to conver from car coordinate system to map coordinate system
+        std::vector<LandmarkObs> transformed_observations;
+        for(int j = 0; j < observations.size(); j++){
+            LandmarkObs tmp;
+            tmp.x = cos(particles[i].theta) * observations[j].x - sin(particles[i].theta) * observations[j].x;
+            tmp.y = sin(particles[i].theta) * observations[j].y + cos(particles[i].theta) * observations[j].y;
+            transformed_observations.push_back(tmp);
+        }
+        // Discard landmarks out of sensor range
+        std::vector<LandmarkObs> landmarks_in_range;
+        for(int k = 0; k < map_landmarks.landmark_list.size(); k++){
+            double range = dist(particles[i].x, particles[i].y,
+                                map_landmarks.landmark_list[k].x_f, map_landmarks.landmark_list[k].y_f);
+            if(range < sensor_range){
+                LandmarkObs tmp;
+                tmp.x = map_landmarks.landmark_list[k].x_f;
+                tmp.y = map_landmarks.landmark_list[k].y_f;
+                tmp.id = map_landmarks.landmark_list[k].id_i;
+                landmarks_in_range.push_back(tmp);
+            }
+        }
+
+        dataAssociation(landmarks_in_range, transformed_observations);
+        double sig_x = std_landmark[0];
+        double sig_y = std_landmark[1];
+        double exponent;
+
+        double gauss_norm = 1 / (2 * M_PI * sig_x * sig_y);
+        for(int l = 0; transformed_observations.size(); l++){
+            double x = transformed_observations[l].x;
+            double y = transformed_observations[l].y;
+
+            for(int m = 0; map_landmarks.landmark_list.size(); m++){
+                if(map_landmarks.landmark_list[m].id_i == transformed_observations[l].id){
+                    double mu_x = landmarks_in_range[m].x;
+                    double mu_y = landmarks_in_range[m].y;
+
+                    exponent = pow(x - mu_x, 2) / (2 * sig_x * sig_x) +
+                                      pow(y - mu_y, 2) / (2 * sig_y * sig_y);
+
+                    particles[i].weight *= gauss_norm * exp(- exponent);
+                }
+            }
+            weights[i] = gauss_norm * exp(- exponent);
+        }
+        weight_total += particles[i].weight;
     }
 
+    for(int i = 0; i < particles.size(); i++){
+        particles[i].weight /= weight_total;
+        weights[i] = particles[i].weight;
+    }
 }
 
 void ParticleFilter::resample() {
@@ -141,6 +191,7 @@ void ParticleFilter::resample() {
    * NOTE: You may find std::discrete_distribution helpful here.
    *   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
    */
+
 
 }
 
