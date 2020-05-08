@@ -130,9 +130,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         std::vector<LandmarkObs> transformed_observations;
         for(int j = 0; j < observations.size(); j++){
             LandmarkObs tmp;
-            tmp.x = cos(particles[i].theta) * observations[j].x - sin(particles[i].theta) * observations[j].x;
-            tmp.y = sin(particles[i].theta) * observations[j].y + cos(particles[i].theta) * observations[j].y;
-            transformed_observations.push_back(tmp);
+            double x = particles[i].x + cos(particles[i].theta) * observations[j].x - sin(particles[i].theta) * observations[j].x;
+            double y = particles[i].y + sin(particles[i].theta) * observations[j].y + cos(particles[i].theta) * observations[j].y;
+            transformed_observations.push_back(LandmarkObs{ observations[j].id, x, y});
         }
         // Discard landmarks out of sensor range
         std::vector<LandmarkObs> landmarks_in_range;
