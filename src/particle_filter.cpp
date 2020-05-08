@@ -61,26 +61,21 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
    *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
    *  http://www.cplusplus.com/reference/random/default_random_engine/
    */
-
-    double pred_x;
-    double pred_y;
-    double pred_theta;
     std::default_random_engine gen;
 
     for(int i = 0; i < num_particles; i++){
         if(fabs(yaw_rate < 0.0001)){
-            pred_x = particles[i].x + velocity * cos(particles[i].theta) * delta_t;
-            pred_y = particles[i].y + velocity * sin(particles[i].theta) * delta_t;
-            pred_theta = particles[i].theta;
+            particles[i].x += velocity * cos(particles[i].theta) * delta_t;
+            particles[i].y += velocity * sin(particles[i].theta) * delta_t;
         }else{
-            pred_x = particles[i].x + velocity / yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
-            pred_y = particles[i].y + velocity / yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta - yaw_rate * delta_t));
-            pred_theta = particles[i].theta + yaw_rate * delta_t;
+            particles[i].x += velocity / yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
+            particles[i].y += velocity / yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta - yaw_rate * delta_t));
+            particles[i].theta += yaw_rate * delta_t;
         }
 
-        normal_distribution<double> dist_x(pred_x, std_pos[0]);
-        normal_distribution<double> dist_y(pred_y, std_pos[1]);
-        normal_distribution<double> dist_theta(pred_theta, std_pos[2]);
+        normal_distribution<double> dist_x(particles[i].x, std_pos[0]);
+        normal_distribution<double> dist_y(particles[i].y, std_pos[1]);
+        normal_distribution<double> dist_theta(particles[i].theta, std_pos[2]);
 
         particles[i].x = dist_x(gen);
         particles[i].y = dist_y(gen);
