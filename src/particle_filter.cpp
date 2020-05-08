@@ -159,11 +159,11 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         double exponent;
 
         double gauss_norm = 1 / (2 * M_PI * sig_x * sig_y);
-        for(int j = 0; transformed_observations.size(); j++){
+        for(int j = 0; j < transformed_observations.size(); j++){
             double x = transformed_observations[j].x;
             double y = transformed_observations[j].y;
 
-            for(int k = 0; map_landmarks.landmark_list.size(); k++){
+            for(int k = 0; k < landmarks_in_range.size(); k++){
                 if(map_landmarks.landmark_list[k].id_i == transformed_observations[j].id){
                     double mu_x = landmarks_in_range[k].x;
                     double mu_y = landmarks_in_range[k].y;
