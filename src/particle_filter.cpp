@@ -123,7 +123,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
-    double weight_norm = 0.0;
     for(int i = 0; i < num_particles; i++){
 
         // Apply homogeneous transformation to conver from car coordinate system to map coordinate system
@@ -154,6 +153,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         double exponent;
 
         double gauss_norm = 1 / (2 * M_PI * sig_x * sig_y);
+
+        particles[i].weight = 1.0;
+        double weight_norm = 0.0;
+
         for(int j = 0; j < transformed_observations.size(); j++){
             double x = transformed_observations[j].x;
             double y = transformed_observations[j].y;
