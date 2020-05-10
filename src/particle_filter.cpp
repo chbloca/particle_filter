@@ -66,12 +66,12 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 
     for(int i = 0; i < num_particles; i++){
         // Apply bicycle model motion prodiction
-        if(fabs(yaw_rate < 0.0001)){ // to avoid division by zero
+        if(fabs(yaw_rate) < 0.0001){ // to avoid division by zero
             particles[i].x += velocity * cos(particles[i].theta) * delta_t;
             particles[i].y += velocity * sin(particles[i].theta) * delta_t;
         }else{
             particles[i].x += velocity / yaw_rate * (sin(particles[i].theta + yaw_rate * delta_t) - sin(particles[i].theta));
-            particles[i].y += velocity / yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta - yaw_rate * delta_t));
+            particles[i].y += velocity / yaw_rate * (cos(particles[i].theta) - cos(particles[i].theta + yaw_rate * delta_t));
             particles[i].theta += yaw_rate * delta_t;
         }
         // Add Gaussian noise to such predictions
@@ -134,8 +134,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         std::vector<LandmarkObs> transformed_observations;
         for(int j = 0; j < observations.size(); j++){
             LandmarkObs tmp;
-            double x = particles[i].x + cos(particles[i].theta) * observations[j].x - sin(particles[i].theta) * observations[j].x;
-            double y = particles[i].y + sin(particles[i].theta) * observations[j].y + cos(particles[i].theta) * observations[j].y;
+            double x = particles[i].x + cos(particles[i].theta) * observations[j].x - sin(particles[i].theta) * observations[j].y;
+            double y = particles[i].y + sin(particles[i].theta) * observations[j].x + cos(particles[i].theta) * observations[j].y;
             transformed_observations.push_back(LandmarkObs{ observations[j].id, x, y});
         }
         // Discard landmarks out of sensor range
@@ -167,7 +167,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             double y = transformed_observations[j].y;
 
             for(int k = 0; k < landmarks_in_range.size(); k++){
-                if(map_landmarks.landmark_list[k].id_i == transformed_observations[j].id){
+                if(landmarks_in_range[k].id == transformed_observations[j].id){
                     double mu_x = landmarks_in_range[k].x;
                     double mu_y = landmarks_in_range[k].y;
                     // Compute multivariate-Gaussian probability for every particle
